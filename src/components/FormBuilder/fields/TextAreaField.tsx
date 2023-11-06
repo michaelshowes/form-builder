@@ -1,6 +1,5 @@
 'use client';
 
-import { MdTextFields } from 'react-icons/md';
 import {
   ElementsType,
   FormElement,
@@ -13,7 +12,7 @@ import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useState } from 'react';
-import { useDesigner } from '@/context/DesignerContext';
+
 import {
   Form,
   FormControl,
@@ -25,24 +24,30 @@ import {
 } from '@/components/ui/form';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
+import { BsTextareaResize } from 'react-icons/bs';
+import { Textarea } from '@/components/ui/textarea';
+import { Slider } from '@/components/ui/slider';
+import { useDesigner } from '@/context/DesignerContext';
 
-const type: ElementsType = 'TextField';
+const type: ElementsType = 'TextAreaField';
 
 const extraAttributes = {
-  label: 'Text Field',
-  helperText: 'Helper Text',
+  label: 'Text area',
+  helperText: 'Helper text',
   required: false,
-  placeholder: 'Value here...'
+  placeHolder: 'Value here...',
+  rows: 3
 };
 
 const propertiesSchema = z.object({
   label: z.string().min(2).max(50),
   helperText: z.string().max(200),
   required: z.boolean().default(false),
-  placeholder: z.string().max(50)
+  placeHolder: z.string().max(50),
+  rows: z.number().min(1).max(10)
 });
 
-export const TextFieldFormElement: FormElement = {
+export const TextAreaFormElement: FormElement = {
   type,
   construct: (id: string) => ({
     id,
@@ -50,8 +55,8 @@ export const TextFieldFormElement: FormElement = {
     extraAttributes
   }),
   designerBtnElement: {
-    icon: MdTextFields,
-    label: 'Text Field'
+    icon: BsTextareaResize,
+    label: 'TextArea Field'
   },
   designerComponent: DesignerComponent,
   formComponent: FormComponent,
@@ -74,36 +79,32 @@ type CustomInstance = FormElementInstance & {
   extraAttributes: typeof extraAttributes;
 };
 
-type PropertiesFormSchemaType = z.infer<typeof propertiesSchema>;
-
-// Designer Component
 function DesignerComponent({
   elementInstance
 }: {
   elementInstance: FormElementInstance;
 }) {
   const element = elementInstance as CustomInstance;
-  const { label, required, placeholder, helperText } = element.extraAttributes;
-
+  const { label, required, placeHolder, helperText, rows } =
+    element.extraAttributes;
   return (
-    <div className={'flex w-full flex-col gap-2'}>
+    <div className='flex w-full flex-col gap-2'>
       <Label>
         {label}
         {required && '*'}
       </Label>
-      <Input
+      <Textarea
         readOnly
         disabled
-        placeholder={placeholder}
+        placeholder={placeHolder}
       />
       {helperText && (
-        <p className={'text-[.8rem] text-muted-foreground'}>{helperText}</p>
+        <p className='text-[0.8rem] text-muted-foreground'>{helperText}</p>
       )}
     </div>
   );
 }
 
-// Form Component
 function FormComponent({
   elementInstance,
   submitValue,
@@ -117,7 +118,6 @@ function FormComponent({
 }) {
   const element = elementInstance as CustomInstance;
 
-  const { label, required, placeholder, helperText } = element.extraAttributes;
   const [value, setValue] = useState(defaultValue || '');
   const [error, setError] = useState(false);
 
@@ -125,19 +125,22 @@ function FormComponent({
     setError(isInvalid === true);
   }, [isInvalid]);
 
+  const { label, required, placeHolder, helperText, rows } =
+    element.extraAttributes;
   return (
-    <div className={'flex w-full flex-col gap-2'}>
+    <div className='flex w-full flex-col gap-2'>
       <Label className={cn(error && 'text-red-500')}>
         {label}
         {required && '*'}
       </Label>
-      <Input
+      <Textarea
         className={cn(error && 'border-red-500')}
-        placeholder={placeholder}
+        rows={rows}
+        placeholder={placeHolder}
         onChange={(e) => setValue(e.target.value)}
         onBlur={(e) => {
           if (!submitValue) return;
-          const valid = TextFieldFormElement.validate(element, e.target.value);
+          const valid = TextAreaFormElement.validate(element, e.target.value);
           setError(!valid);
           if (!valid) return;
           submitValue(element.id, e.target.value);
@@ -158,23 +161,24 @@ function FormComponent({
   );
 }
 
-// Properties Component
+type propertiesFormSchemaType = z.infer<typeof propertiesSchema>;
+
 function PropertiesComponent({
   elementInstance
 }: {
   elementInstance: FormElementInstance;
 }) {
   const element = elementInstance as CustomInstance;
-  const { label, required, placeholder, helperText } = element.extraAttributes;
   const { updateElement } = useDesigner();
-  const form = useForm<PropertiesFormSchemaType>({
+  const form = useForm<propertiesFormSchemaType>({
     resolver: zodResolver(propertiesSchema),
     mode: 'onBlur',
     defaultValues: {
-      label,
-      required,
-      placeholder,
-      helperText
+      label: element.extraAttributes.label,
+      helperText: element.extraAttributes.helperText,
+      required: element.extraAttributes.required,
+      placeHolder: element.extraAttributes.placeHolder,
+      rows: element.extraAttributes.rows
     }
   });
 
@@ -182,11 +186,16 @@ function PropertiesComponent({
     form.reset(element.extraAttributes);
   }, [element, form]);
 
-  function applyChanges(values: PropertiesFormSchemaType) {
+  function applyChanges(values: propertiesFormSchemaType) {
+    const { label, helperText, placeHolder, required, rows } = values;
     updateElement(element.id, {
       ...element,
       extraAttributes: {
-        ...values
+        label,
+        helperText,
+        placeHolder,
+        required,
+        rows
       }
     });
   }
@@ -194,16 +203,15 @@ function PropertiesComponent({
   return (
     <Form {...form}>
       <form
-        className={'space-y-3'}
         onBlur={form.handleSubmit(applyChanges)}
         onSubmit={(e) => {
           e.preventDefault();
         }}
+        className='space-y-3'
       >
-        {/* Label Field */}
         <FormField
           control={form.control}
-          name={'label'}
+          name='label'
           render={({ field }) => (
             <FormItem>
               <FormLabel>Label</FormLabel>
@@ -216,22 +224,19 @@ function PropertiesComponent({
                 />
               </FormControl>
               <FormDescription>
-                The label of the field.
-                <br />
-                It will be displayed above the field
+                The label of the field. <br /> It will be displayed above the
+                field
               </FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
-
-        {/* Placeholder Field */}
         <FormField
           control={form.control}
-          name={'placeholder'}
+          name='placeHolder'
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Placeholder</FormLabel>
+              <FormLabel>PlaceHolder</FormLabel>
               <FormControl>
                 <Input
                   {...field}
@@ -240,19 +245,17 @@ function PropertiesComponent({
                   }}
                 />
               </FormControl>
-              <FormDescription>The placeholder of the field</FormDescription>
+              <FormDescription>The placeholder of the field.</FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
-
-        {/* Helper text Field */}
         <FormField
           control={form.control}
-          name={'helperText'}
+          name='helperText'
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Helper Text</FormLabel>
+              <FormLabel>Helper text</FormLabel>
               <FormControl>
                 <Input
                   {...field}
@@ -262,31 +265,44 @@ function PropertiesComponent({
                 />
               </FormControl>
               <FormDescription>
-                The helper text of the field.
-                <br />
-                It will be displayed below the field
+                The helper text of the field. <br />
+                It will be displayed below the field.
               </FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
-
-        {/* Required Field Toggle */}
         <FormField
           control={form.control}
-          name={'required'}
+          name='rows'
           render={({ field }) => (
-            <FormItem
-              className={
-                'flex items-center justify-between rounded-lg border p-3 shadow-sm'
-              }
-            >
-              <div className={'space-y-0.5'}>
+            <FormItem>
+              <FormLabel>Rows {form.watch('rows')}</FormLabel>
+              <FormControl>
+                <Slider
+                  defaultValue={[field.value]}
+                  min={1}
+                  max={10}
+                  step={1}
+                  onValueChange={(value) => {
+                    field.onChange(value[0]);
+                  }}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name='required'
+          render={({ field }) => (
+            <FormItem className='flex items-center justify-between rounded-lg border p-3 shadow-sm'>
+              <div className='space-y-0.5'>
                 <FormLabel>Required</FormLabel>
                 <FormDescription>
-                  The helper text of the field.
-                  <br />
-                  It will be displayed below the field
+                  The helper text of the field. <br />
+                  It will be displayed below the field.
                 </FormDescription>
               </div>
               <FormControl>
