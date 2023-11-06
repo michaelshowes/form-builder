@@ -1,7 +1,6 @@
 import { GetFormStats } from '@/actions/form';
-import { FileText, MousePointerClick, Split, View } from 'lucide-react';
-import StatCard from './StatCard';
 import { Stat } from '@/app/(dashboard)/page';
+import StatCard from './StatCard';
 
 export default async function Stats({ data }: { data: Stat[] }) {
   const stats: Awaited<ReturnType<typeof GetFormStats>> = await GetFormStats();

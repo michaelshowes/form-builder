@@ -1,11 +1,9 @@
 'use client';
 
+import { Monitor, Moon, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useEffect, useState } from 'react';
 import { Tabs, TabsList, TabsTrigger } from './ui/tabs';
-import { Monitor, Moon, Sun } from 'lucide-react';
-import { Button } from './ui/button';
-import clsx from 'clsx';
 
 export default function ThemeSwitcher() {
   const { theme, setTheme } = useTheme();
