@@ -3,6 +3,10 @@ import FormLinkShare from '@/components/FormLinkShare';
 import Stats from '@/components/Stats/Stats';
 import SubmissionsTable from '@/components/SubmissionsTable';
 import VisitBtn from '@/components/VisitBtn';
+import { FaWpforms } from 'react-icons/fa';
+import { HiCursorClick } from 'react-icons/hi';
+import { LuView } from 'react-icons/lu';
+import { TbArrowBounce } from 'react-icons/tb';
 
 export default async function FormDetailPage({
   params
@@ -25,6 +29,37 @@ export default async function FormDetailPage({
 
   const bounceRate = 100 - submissionRate;
 
+  const statList = [
+    {
+      title: 'Total Visits',
+      icon: <LuView className={'text-blue-600'} />,
+      helperText: 'All time form visits',
+      value: visits.toLocaleString() || '',
+      className: 'shadow-md shadow-blue-600'
+    },
+    {
+      title: 'Total Submissions',
+      icon: <FaWpforms className={'text-yellow-600'} />,
+      helperText: 'All time form submissions',
+      value: submissions.toLocaleString() || '',
+      className: 'shadow-md shadow-yellow-600'
+    },
+    {
+      title: 'Submission Rate',
+      icon: <HiCursorClick className={'text-green-600'} />,
+      helperText: 'Visits that result in a form submission',
+      value: `${submissionRate.toLocaleString()}%` || '',
+      className: 'shadow-md shadow-green-600'
+    },
+    {
+      title: 'Bounce Rate',
+      icon: <TbArrowBounce className={'text-red-600'} />,
+      helperText: 'Visits that leave without submitting a form',
+      value: `${bounceRate.toLocaleString()}%` || '',
+      className: 'shadow-md shadow-red-600'
+    }
+  ];
+
   return (
     <>
       <div className='border-b border-muted py-10'>
@@ -43,7 +78,7 @@ export default async function FormDetailPage({
           'container grid grid-cols-1 gap-4 pt-8 md:grid-cols-2 lg:grid-cols-4'
         }
       >
-        <Stats />
+        <Stats data={statList} />
       </div>
       <div className={'container pt-10'}>
         <SubmissionsTable id={form.id} />
